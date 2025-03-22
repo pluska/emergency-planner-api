@@ -5,6 +5,8 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { createClient } from 'redis';
 import dotenv from 'dotenv';
+import authRoutes from './routes/authRoutes';
+import { AppDataSource } from './data-source';
 
 // Load environment variables
 dotenv.config();
@@ -16,14 +18,32 @@ const port = process.env.PORT || 3000;
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use('/api/auth', authRoutes);
 
 // Redis client setup
 const redisClient = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379',
+  socket: {
+    reconnectStrategy: (retries) => {
+      if (retries > 10) {
+        console.error('Max reconnection attempts reached');
+        return new Error('Max reconnection attempts reached');
+      }
+      return Math.min(retries * 100, 3000);
+    },
+  }
 });
 
-redisClient.on('error', (err) => console.error('Redis Client Error', err));
+redisClient.on('error', (err) => {
+  console.error('Redis Client Error:', err);
+  if (err.code === 'ECONNREFUSED') {
+    console.error('Make sure Redis server is running');
+  }
+});
+
 redisClient.on('connect', () => console.log('Redis Client Connected'));
+redisClient.on('ready', () => console.log('Redis Client Ready'));
+redisClient.on('reconnecting', () => console.log('Redis Client Reconnecting'));
 
 // Swagger configuration
 const swaggerOptions = {
@@ -55,7 +75,20 @@ app.get('/health', (req, res) => {
 // Start server
 const startServer = async () => {
   try {
-    await redisClient.connect();
+    await AppDataSource.initialize();
+    console.log('Database connection established');
+    
+    try {
+      await redisClient.connect();
+      console.log('Redis connected successfully');
+    } catch (redisError) {
+      if (redisError instanceof Error) {
+        console.warn('Redis connection failed, continuing without Redis:', redisError.message);
+      } else {
+        console.warn('Redis connection failed, continuing without Redis:', redisError);
+      }
+    }
+
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
       console.log(`Swagger documentation available at http://localhost:${port}/api-docs`);
@@ -66,4 +99,4 @@ const startServer = async () => {
   }
 };
 
-startServer(); 
+startServer();
