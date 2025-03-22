@@ -38,6 +38,8 @@ redisClient.on('error', (err) => {
   console.error('Redis Client Error:', err);
   if (err.code === 'ECONNREFUSED') {
     console.error('Make sure Redis server is running');
+  } else {
+    console.error('An unexpected error occurred:', err.message);
   }
 });
 
