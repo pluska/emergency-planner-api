@@ -19,8 +19,6 @@ async function testRedisConnection() {
 
         // Test operation
         await redisClient.set('test-key', 'test-value');
-        const value = await redisClient.get('test-key');
-        console.log('Test key value:', value);
 
         await redisClient.disconnect();
         console.log('Redis connection closed successfully');

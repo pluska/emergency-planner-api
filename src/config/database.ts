@@ -9,15 +9,17 @@ const password = process.env.DB_PASSWORD;
 if (!password) {
     throw new Error('Database password is not set in environment variables');
 }
-
-const connectionString = `postgresql://${process.env.DB_USERNAME}:${password}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
-
+// TODO: Add SSL configuration
 export const AppDataSource = new DataSource({
     type: 'postgres',
-    url: connectionString,
-    synchronize: process.env.NODE_ENV !== 'production',
-    logging: process.env.NODE_ENV !== 'production',
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    username: process.env.DB_USERNAME || 'postgres',
+    password: process.env.DB_PASSWORD || '24999525',
+    database: process.env.DB_NAME || 'emergency_planner',
+    synchronize: process.env.NODE_ENV === 'development',
+    logging: process.env.NODE_ENV === 'development',
     entities: [User],
-    migrations: [],
     subscribers: [],
+    migrations: [],
 });
