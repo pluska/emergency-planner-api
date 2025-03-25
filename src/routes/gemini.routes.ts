@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { generateResponse } from '../controllers/geminiController';
-import { authenticateToken } from '../middlewares/auth';
+import { auth } from '../middlewares/auth';
 
 const router = Router();
 
@@ -41,6 +41,6 @@ const router = Router();
  *       500:
  *         description: Server error
  */
-router.post('/generate', authenticateToken, generateResponse);
+router.post('/generate', auth, generateResponse);
 
-export default router; 
+export default router;

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getBeginSteps, getPlanSteps, determineRecommendedPlan, generatePlan } from '../controllers/planController';
-import { authenticateToken } from '../middlewares/auth';
+import { auth } from '../middlewares/auth';
 
 const router = Router();
 
@@ -16,7 +16,7 @@ const router = Router();
  *       200:
  *         description: Initial assessment steps retrieved successfully
  */
-router.get('/begin', authenticateToken, getBeginSteps);
+router.get('/begin', auth, getBeginSteps);
 
 /**
  * @swagger
@@ -37,7 +37,7 @@ router.get('/begin', authenticateToken, getBeginSteps);
  *       200:
  *         description: Plan steps retrieved successfully
  */
-router.get('/:planType/steps', authenticateToken, getPlanSteps);
+router.get('/:planType/steps', auth, getPlanSteps);
 
 /**
  * @swagger
@@ -57,7 +57,7 @@ router.get('/:planType/steps', authenticateToken, getPlanSteps);
  *       200:
  *         description: Plan recommendations generated successfully
  */
-router.post('/recommend', authenticateToken, determineRecommendedPlan);
+router.post('/recommend', auth, determineRecommendedPlan);
 
 /**
  * @swagger
@@ -77,6 +77,6 @@ router.post('/recommend', authenticateToken, determineRecommendedPlan);
  *       200:
  *         description: AI-generated plan created successfully
  */
-router.post('/generate', authenticateToken, generatePlan);
+router.post('/generate', auth, generatePlan);
 
 export default router; 
