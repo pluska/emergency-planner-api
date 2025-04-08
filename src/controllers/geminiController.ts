@@ -13,7 +13,7 @@ export const generateResponse = async (req: Request, res: Response) => {
         }
 
         // Get the model
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         // Generate content
         const result = await model.generateContent(prompt);

@@ -6,8 +6,8 @@ module.exports = {
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
-  },
-  setupFiles: ['<rootDir>/src/test/setup.ts'],
+  moduleFileExtensions: ['ts', 'js', 'json', 'node'],
+  collectCoverage: process.env.npm_lifecycle_event === 'test:coverage',
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov'],
 }; 

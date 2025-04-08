@@ -1,5 +1,7 @@
-import { PlanStep, PlanType, PlanRecommendation } from '../types/plans';
-
+import { PlanStep, PlanType, PlanRecommendation } from '../interface/Plans';
+import { emergencyBagpackSteps } from '../plans/bagpack';
+import { emergencyFundSteps } from '../plans/fund';
+import { storageSteps } from '../plans/storage';
 // Plan steps definitions
 const beginSteps: PlanStep[] = [
   {
@@ -44,15 +46,6 @@ const beginSteps: PlanStep[] = [
       }
     ]
   },
-  // ... rest of the steps from begin.ts
-];
-
-const emergencyBagpackSteps: PlanStep[] = [
-  // ... steps from emergency-bagpack.ts
-];
-
-const emergencyFundSteps: PlanStep[] = [
-  // ... steps from emergency-fund.ts
 ];
 
 export class PlanService {
@@ -67,8 +60,7 @@ export class PlanService {
       case 'emergency-fund':
         return emergencyFundSteps;
       case 'storage':
-        // TODO: Implement storage steps
-        return [];
+        return storageSteps;
       default:
         throw new Error('Invalid plan type');
     }
