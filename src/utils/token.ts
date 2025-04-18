@@ -6,8 +6,9 @@ import { UserInterface } from '../interface/User';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 interface JWTPayload {
-  userId: string;
+  id: string;
   email: string;
+  name: string;
 }
 const generateToken = async (payload: JWTPayload): Promise<string> => {
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });

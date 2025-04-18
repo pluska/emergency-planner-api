@@ -38,11 +38,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         // Create dummy user with hashed password
         const user = await createDummyUser(email, password, name);
         // Generate token
-        const token = await generateToken({ userId: user.id, email: user.email });
+        const token = await generateToken({ id: user.id, email: user.email, name: user.name });
         res.status(201).json({
             message: 'User registered successfully',
             token,
-            user: { id: user.id, email: user.email }
+            user: { id: user.id, email: user.email, name: user.name }
         });
     } catch (error) {
         console.error('Error in registration:', error);
@@ -75,12 +75,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         }
 
         // Generate token
-        const token = await generateToken({ userId: user.id, email: user.email });
+        const token = await generateToken({ id: user.id, email: user.email, name: user.name });
 
         res.json({
             message: 'Login successful',
             token,
-            user: { id: user.id, email: user.email }
+            user: { id: user.id, email: user.email, name: user.name }
         });
     } catch (error) {
         console.error('Error in login:', error);

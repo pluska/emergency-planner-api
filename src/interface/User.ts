@@ -1,6 +1,16 @@
-export interface UserInterface {
+import { Request } from 'express';
+
+export interface UserInterface extends Request {
     user: {
-        userId: string;
+        id: string;
         email: string;
-    };
+        name: string;
+    }
+}
+
+export interface User {
+    id: string;
+    email: string;
+    name: string;
+    password: string;
 }

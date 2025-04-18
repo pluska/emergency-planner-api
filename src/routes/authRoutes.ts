@@ -190,5 +190,52 @@ router.post('/login', login);
  */
 router.post('/logout', authenticate, logout);
 
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Get current user information
+ *     description: Retrieves the information of the currently authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User information retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *       401:
+ *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Not authenticated"
+ */
+router.get('/me', authenticate, async (req, res) => {
+    try {
+        // @ts-expect-error - user is added by authenticate middleware
+        const { id, email, name } = req.user;
+        res.json({ user: { id, email, name } });
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        res.status(500).json({ error: 'Failed to fetch user data' });
+    }
+});
 
 export default router;
