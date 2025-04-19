@@ -21,23 +21,23 @@ export class EmergencyPlansController extends BaseController<EmergencyPlan> {
         this.emergencyPlanService = new EmergencyPlanService();
     }
 
-    protected async getItemById(id: string): Promise<EmergencyPlan | null> {
+    public async getItemById(id: string): Promise<EmergencyPlan | null> {
         return this.emergencyPlanService.getById(id);
     }
 
-    protected async getAllItems(): Promise<EmergencyPlan[]> {
+    public async getAllItems(): Promise<EmergencyPlan[]> {
         return this.emergencyPlanService.getAll();
     }
 
-    protected async createItem(item: EmergencyPlan): Promise<EmergencyPlan> {
+    public async createItem(item: EmergencyPlan): Promise<EmergencyPlan> {
         return this.emergencyPlanService.create(item);
     }
 
-    protected async updateItem(id: string, item: Partial<EmergencyPlan>): Promise<EmergencyPlan | null> {
+    public async updateItem(id: string, item: Partial<EmergencyPlan>): Promise<EmergencyPlan | null> {
         return this.emergencyPlanService.update(id, item);
     }
 
-    protected async deleteItem(id: string): Promise<boolean> {
+    public async deleteItem(id: string): Promise<boolean> {
         return this.emergencyPlanService.delete(id);
     }
 

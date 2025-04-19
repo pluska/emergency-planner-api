@@ -7,11 +7,11 @@ export const registerSchema = Joi.object({
     }),
     password: Joi.string()
         .min(8)
-        .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])'))
+        .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_])'))
         .required()
         .messages({
             'string.min': 'Password must be at least 8 characters long',
-            'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+            'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@#$%^&*_)',
             'any.required': 'Password is required'
         }),
     name: Joi.string().min(2).max(50).required().messages({
@@ -28,5 +28,28 @@ export const loginSchema = Joi.object({
     }),
     password: Joi.string().required().messages({
         'any.required': 'Password is required'
+    }),
+    rememberMe: Joi.boolean().optional()
+});
+
+export const forgotPasswordSchema = Joi.object({
+    email: Joi.string().email().required().messages({
+        'string.email': 'Please provide a valid email address',
+        'any.required': 'Email is required'
     })
+});
+
+export const resetPasswordSchema = Joi.object({
+    token: Joi.string().required().messages({
+        'any.required': 'Reset token is required'
+    }),
+    password: Joi.string()
+        .min(8)
+        .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_])'))
+        .required()
+        .messages({
+            'string.min': 'Password must be at least 8 characters long',
+            'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@#$%^&*_)',
+            'any.required': 'Password is required'
+        })
 }); 

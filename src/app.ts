@@ -15,6 +15,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Health check endpoint
+app.get('/api/health', (_req, res) => {
+    res.json({ status: 'ok' });
+});
+
 // Configurar Swagger antes de las rutas
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     explorer: true,
@@ -32,7 +37,7 @@ app.use('/api/plans', planRoutes);
 app.use('/api/gemini', geminiRoutes);
 app.use('/api/emergency-plans', emergencyPlansRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
