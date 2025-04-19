@@ -9,12 +9,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password, name } = req.body;
 
-        // Validate required fields
-        if (!email || !password || !name) {
-            res.status(400).json({ error: 'Missing required fields' });
-            return;
-        }
-
         // Check if user exists
         const existingUser = await userService.findByEmail(email);
         if (existingUser) {
@@ -47,12 +41,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = req.body;
-
-        // Validate required fields
-        if (!email || !password) {
-            res.status(400).json({ error: 'Missing required fields' });
-            return;
-        }
 
         // Verify credentials
         const user = await userService.verifyPassword(email, password);

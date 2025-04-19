@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { register, login, logout } from '../controllers/authController';
 import { authenticate } from '../middlewares/auth';
+import { validateRegister, validateLogin } from '../middlewares/validation';
 
 const router = Router();
 
@@ -90,7 +91,7 @@ const router = Router();
  *                   type: string
  *                   example: "Internal server error occurred"
  */
-router.post('/register', register);
+router.post('/register', validateRegister, register);
 
 /**
  * @swagger
@@ -145,7 +146,7 @@ router.post('/register', register);
  *                   type: string
  *                   example: "Internal server error occurred"
  */
-router.post('/login', login);
+router.post('/login', validateLogin, login);
 
 /**
  * @swagger

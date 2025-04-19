@@ -35,10 +35,12 @@ jest.mock('../utils/token', () => ({
 
 import { Request, Response } from 'express';
 import { register, login, logout } from '../controllers/authController';
+import { validateRegister, validateLogin } from '../middlewares/validation';
 
 describe('Authentication', () => {
     let mockRequest: Partial<Request>;
     let mockResponse: Partial<Response>;
+    let mockNext: jest.Mock;
     let mockRedisSet: jest.Mock;
     let mockRedisDel: jest.Mock;
 
@@ -51,6 +53,7 @@ describe('Authentication', () => {
             json: jest.fn(),
             status: jest.fn().mockReturnThis(),
         };
+        mockNext = jest.fn();
 
         // Get the mock functions
         const redisMock = require('redis');
@@ -60,6 +63,102 @@ describe('Authentication', () => {
 
         // Clear all mock calls
         jest.clearAllMocks();
+    });
+
+    describe('Validation', () => {
+        describe('Register Validation', () => {
+            it('should pass validation with valid data', () => {
+                mockRequest.body = {
+                    email: 'test@example.com',
+                    password: 'Password123!',
+                    name: 'Test User'
+                };
+
+                validateRegister(mockRequest as Request, mockResponse as Response, mockNext);
+                expect(mockNext).toHaveBeenCalled();
+                expect(mockResponse.status).not.toHaveBeenCalled();
+            });
+
+            it('should fail validation with invalid email', () => {
+                mockRequest.body = {
+                    email: 'invalid-email',
+                    password: 'Password123!',
+                    name: 'Test User'
+                };
+
+                validateRegister(mockRequest as Request, mockResponse as Response, mockNext);
+                expect(mockResponse.status).toHaveBeenCalledWith(400);
+                expect(mockResponse.json).toHaveBeenCalledWith({
+                    error: 'Please provide a valid email address'
+                });
+            });
+
+            it('should fail validation with weak password', () => {
+                mockRequest.body = {
+                    email: 'test@example.com',
+                    password: 'weak',
+                    name: 'Test User'
+                };
+
+                validateRegister(mockRequest as Request, mockResponse as Response, mockNext);
+                expect(mockResponse.status).toHaveBeenCalledWith(400);
+                expect(mockResponse.json).toHaveBeenCalledWith({
+                    error: 'Password must be at least 8 characters long'
+                });
+            });
+
+            it('should fail validation with missing required fields', () => {
+                mockRequest.body = {
+                    email: 'test@example.com'
+                    // Missing password and name
+                };
+
+                validateRegister(mockRequest as Request, mockResponse as Response, mockNext);
+                expect(mockResponse.status).toHaveBeenCalledWith(400);
+                expect(mockResponse.json).toHaveBeenCalledWith({
+                    error: 'Password is required'
+                });
+            });
+        });
+
+        describe('Login Validation', () => {
+            it('should pass validation with valid data', () => {
+                mockRequest.body = {
+                    email: 'test@example.com',
+                    password: 'Password123!'
+                };
+
+                validateLogin(mockRequest as Request, mockResponse as Response, mockNext);
+                expect(mockNext).toHaveBeenCalled();
+                expect(mockResponse.status).not.toHaveBeenCalled();
+            });
+
+            it('should fail validation with invalid email', () => {
+                mockRequest.body = {
+                    email: 'invalid-email',
+                    password: 'Password123!'
+                };
+
+                validateLogin(mockRequest as Request, mockResponse as Response, mockNext);
+                expect(mockResponse.status).toHaveBeenCalledWith(400);
+                expect(mockResponse.json).toHaveBeenCalledWith({
+                    error: 'Please provide a valid email address'
+                });
+            });
+
+            it('should fail validation with missing password', () => {
+                mockRequest.body = {
+                    email: 'test@example.com'
+                    // Missing password
+                };
+
+                validateLogin(mockRequest as Request, mockResponse as Response, mockNext);
+                expect(mockResponse.status).toHaveBeenCalledWith(400);
+                expect(mockResponse.json).toHaveBeenCalledWith({
+                    error: 'Password is required'
+                });
+            });
+        });
     });
 
     describe('register', () => {
@@ -72,7 +171,7 @@ describe('Authentication', () => {
 
             mockRequest.body = {
                 email: 'test@example.com',
-                password: 'password123',
+                password: 'Password123!',
                 name: 'Test User'
             };
 
@@ -82,7 +181,7 @@ describe('Authentication', () => {
             await register(mockRequest as Request, mockResponse as Response);
 
             expect(mockUserServiceInstance.findByEmail).toHaveBeenCalledWith('test@example.com');
-            expect(mockUserServiceInstance.createUser).toHaveBeenCalledWith('test@example.com', 'password123');
+            expect(mockUserServiceInstance.createUser).toHaveBeenCalledWith('test@example.com', 'Password123!');
             expect(mockRedisSet).toHaveBeenCalled();
             expect(mockResponse.status).toHaveBeenCalledWith(201);
             expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
@@ -96,20 +195,6 @@ describe('Authentication', () => {
             }));
         });
 
-        it('should handle missing required fields', async () => {
-            mockRequest.body = {
-                email: 'test@example.com',
-                // Missing password and name
-            };
-
-            await register(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.status).toHaveBeenCalledWith(400);
-            expect(mockResponse.json).toHaveBeenCalledWith({
-                error: 'Missing required fields'
-            });
-        });
-
         it('should handle existing user', async () => {
             const existingUser = {
                 id: '123',
@@ -119,7 +204,7 @@ describe('Authentication', () => {
 
             mockRequest.body = {
                 email: 'test@example.com',
-                password: 'password123',
+                password: 'Password123!',
                 name: 'Test User'
             };
 
@@ -144,14 +229,14 @@ describe('Authentication', () => {
 
             mockRequest.body = {
                 email: 'test@example.com',
-                password: 'password123'
+                password: 'Password123!'
             };
 
             mockUserServiceInstance.verifyPassword.mockResolvedValue(mockUser);
 
             await login(mockRequest as Request, mockResponse as Response);
 
-            expect(mockUserServiceInstance.verifyPassword).toHaveBeenCalledWith('test@example.com', 'password123');
+            expect(mockUserServiceInstance.verifyPassword).toHaveBeenCalledWith('test@example.com', 'Password123!');
             expect(mockRedisSet).toHaveBeenCalled();
             expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
                 message: 'Login successful',
@@ -166,7 +251,7 @@ describe('Authentication', () => {
         it('should handle invalid credentials', async () => {
             mockRequest.body = {
                 email: 'test@example.com',
-                password: 'wrongpassword'
+                password: 'WrongPassword123!'
             };
 
             mockUserServiceInstance.verifyPassword.mockResolvedValue(null);
@@ -176,20 +261,6 @@ describe('Authentication', () => {
             expect(mockResponse.status).toHaveBeenCalledWith(401);
             expect(mockResponse.json).toHaveBeenCalledWith({
                 error: 'Invalid credentials'
-            });
-        });
-
-        it('should handle missing required fields', async () => {
-            mockRequest.body = {
-                email: 'test@example.com',
-                // Missing password
-            };
-
-            await login(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.status).toHaveBeenCalledWith(400);
-            expect(mockResponse.json).toHaveBeenCalledWith({
-                error: 'Missing required fields'
             });
         });
     });
