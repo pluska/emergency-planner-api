@@ -1,49 +1,32 @@
-import { Request, Response } from 'express';
-import { Profile } from '../interface/Profile';
+import { BaseController } from './base/BaseController';
+import { Profile } from '../models/profileModel';
+import { ProfileService } from '../services/ProfileService';
 
-// Mock database operations
-const profiles: Profile[] = [];
+export class ProfileController extends BaseController<Profile> {
+    private profileService: ProfileService;
 
-export class ProfileController {
-    static async createProfile(req: Request, res: Response) {
-        const newProfile: Profile = req.body;
-        profiles.push(newProfile);
-        res.status(201).json(newProfile);
+    constructor() {
+        super();
+        this.profileService = new ProfileService();
     }
 
-    static async getProfiles(req: Request, res: Response) {
-        res.status(200).json(profiles);
+    protected async getItemById(id: string): Promise<Profile | null> {
+        return this.profileService.getById(id);
     }
 
-    static async getProfileById(req: Request, res: Response) {
-        const { id } = req.params;
-        const profile = profiles.find(p => p.id === parseInt(id));
-        if (profile) {
-            res.status(200).json(profile);
-        } else {
-            res.status(404).json({ message: 'Profile not found' });
-        }
+    protected async getAllItems(): Promise<Profile[]> {
+        return this.profileService.getAll();
     }
 
-    static async updateProfile(req: Request, res: Response) {
-        const { id } = req.params;
-        const index = profiles.findIndex(p => p.id === parseInt(id));
-        if (index !== -1) {
-            profiles[index] = { ...profiles[index], ...req.body };
-            res.status(200).json(profiles[index]);
-        } else {
-            res.status(404).json({ message: 'Profile not found' });
-        }
+    protected async createItem(item: Profile): Promise<Profile> {
+        return this.profileService.create(item);
     }
 
-    static async deleteProfile(req: Request, res: Response) {
-        const { id } = req.params;
-        const index = profiles.findIndex(p => p.id === parseInt(id));
-        if (index !== -1) {
-            profiles.splice(index, 1);
-            res.status(204).send();
-        } else {
-            res.status(404).json({ message: 'Profile not found' });
-        }
+    protected async updateItem(id: string, item: Partial<Profile>): Promise<Profile | null> {
+        return this.profileService.update(id, item);
+    }
+
+    protected async deleteItem(id: string): Promise<boolean> {
+        return this.profileService.delete(id);
     }
 } 

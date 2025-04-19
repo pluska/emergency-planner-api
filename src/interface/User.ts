@@ -1,16 +1,19 @@
 import { Request } from 'express';
+import { User } from '../models/userModel';
 
 export interface UserInterface extends Request {
     user: {
         id: string;
         email: string;
-        name: string;
     }
 }
 
-export interface User {
-    id: string;
+export interface CreateUserRequest {
     email: string;
-    name: string;
     password: string;
+}
+
+export interface UpdateUserRequest {
+    email?: string;
+    password?: string;
 }

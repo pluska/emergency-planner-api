@@ -1,49 +1,32 @@
-import { Request, Response } from 'express';
-import { EssentialInfo } from '../interface/Profile';
+import { BaseController } from './base/BaseController';
+import { EssentialInfo } from '../models/essentialInfoModel';
+import { EssentialInfoService } from '../services/EssentialInfoService';
 
-// Mock database operations
-const essentialInfoList: EssentialInfo[] = [];
+export class EssentialInfoController extends BaseController<EssentialInfo> {
+    private essentialInfoService: EssentialInfoService;
 
-export class EssentialInfoController {
-    static async createEssentialInfo(req: Request, res: Response) {
-        const newEssentialInfo: EssentialInfo = req.body;
-        essentialInfoList.push(newEssentialInfo);
-        res.status(201).json(newEssentialInfo);
+    constructor() {
+        super();
+        this.essentialInfoService = new EssentialInfoService();
     }
 
-    static async getEssentialInfo(req: Request, res: Response) {
-        res.status(200).json(essentialInfoList);
+    protected async getItemById(id: string): Promise<EssentialInfo | null> {
+        return this.essentialInfoService.getById(id);
     }
 
-    static async getEssentialInfoById(req: Request, res: Response) {
-        const { id } = req.params;
-        const essentialInfo = essentialInfoList.find(f => f.id === id);
-        if (essentialInfo) {
-            res.status(200).json(essentialInfo);
-        } else {
-            res.status(404).json({ message: 'Essential Info not found' });
-        }
+    protected async getAllItems(): Promise<EssentialInfo[]> {
+        return this.essentialInfoService.getAll();
     }
 
-    static async updateEssentialInfo(req: Request, res: Response) {
-        const { id } = req.params;
-        const index = essentialInfoList.findIndex(f => f.id === id);
-        if (index !== -1) {
-            essentialInfoList[index] = { ...essentialInfoList[index], ...req.body };
-            res.status(200).json(essentialInfoList[index]);
-        } else {
-            res.status(404).json({ message: 'Essential Info not found' });
-        }
+    protected async createItem(item: EssentialInfo): Promise<EssentialInfo> {
+        return this.essentialInfoService.create(item);
     }
 
-    static async deleteEssentialInfo(req: Request, res: Response) {
-        const { id } = req.params;
-        const index = essentialInfoList.findIndex(f => f.id === id);
-        if (index !== -1) {
-            essentialInfoList.splice(index, 1);
-            res.status(204).send();
-        } else {
-            res.status(404).json({ message: 'Essential Info not found' });
-        }
+    protected async updateItem(id: string, item: Partial<EssentialInfo>): Promise<EssentialInfo | null> {
+        return this.essentialInfoService.update(id, item);
+    }
+
+    protected async deleteItem(id: string): Promise<boolean> {
+        return this.essentialInfoService.delete(id);
     }
 } 
