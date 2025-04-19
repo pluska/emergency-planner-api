@@ -1,22 +1,9 @@
 import { Request, Response } from 'express';
 import { generateToken, revokeToken } from '../utils/token';
 import redisClient from '../config/redis';
-import bcrypt from 'bcrypt';
+import { UserService } from '../services/UserService';
 
-const SALT_ROUNDS = 10;
-
-// Dummy user store in Redis
-const createDummyUser = async (email: string, password: string, name: string) => {
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    const user = {
-        id: Math.random().toString(36).substring(7),
-        email,
-        password: hashedPassword,
-        name
-    };
-    await redisClient.set(`user:${email}`, JSON.stringify(user));
-    return user;
-};
+const userService = new UserService();
 
 export const register = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -29,20 +16,27 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         }
 
         // Check if user exists
-        const existingUser = await redisClient.get(`user:${email}`);
+        const existingUser = await userService.findByEmail(email);
         if (existingUser) {
             res.status(400).json({ error: 'User already exists' });
             return;
         }
 
-        // Create dummy user with hashed password
-        const user = await createDummyUser(email, password, name);
-        // Generate token
-        const token = await generateToken({ id: user.id, email: user.email, name: user.name });
+        // Create user in database
+        const user = await userService.createUser(email, password);
+        if (!user.id) {
+            throw new Error('User creation failed - no ID returned');
+        }
+        
+        // Generate token and store session in Redis
+        const token = await generateToken({ id: user.id, email: user.email, name });
+        const sessionKey = `session:${token}`;
+        await redisClient.set(sessionKey, JSON.stringify({ userId: user.id }), { EX: 24 * 60 * 60 }); // 24 hours expiry
+
         res.status(201).json({
             message: 'User registered successfully',
             token,
-            user: { id: user.id, email: user.email, name: user.name }
+            user: { id: user.id, email: user.email, name }
         });
     } catch (error) {
         console.error('Error in registration:', error);
@@ -60,27 +54,22 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        // Get user from Redis
-        const userStr = await redisClient.get(`user:${email}`);
-        if (!userStr) {
+        // Verify credentials
+        const user = await userService.verifyPassword(email, password);
+        if (!user || !user.id) {
             res.status(401).json({ error: 'Invalid credentials' });
             return;
         }
 
-        const user = JSON.parse(userStr);
-        const isValidPassword = await bcrypt.compare(password, user.password);
-        if (!isValidPassword) {
-            res.status(401).json({ error: 'Invalid credentials' });
-            return;
-        }
-
-        // Generate token
-        const token = await generateToken({ id: user.id, email: user.email, name: user.name });
+        // Generate token and store session in Redis
+        const token = await generateToken({ id: user.id, email: user.email, name: '' });
+        const sessionKey = `session:${token}`;
+        await redisClient.set(sessionKey, JSON.stringify({ userId: user.id }), { EX: 24 * 60 * 60 }); // 24 hours expiry
 
         res.json({
             message: 'Login successful',
             token,
-            user: { id: user.id, email: user.email, name: user.name }
+            user: { id: user.id, email: user.email }
         });
     } catch (error) {
         console.error('Error in login:', error);
@@ -90,12 +79,23 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
 export const logout = async (req: Request, res: Response): Promise<void> => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        if (!token) {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
             res.status(401).json({ error: 'No token provided' });
             return;
         }
+
+        const token = authHeader.replace('Bearer ', '');
+        if (!token) {
+            res.status(401).json({ error: 'Invalid token format' });
+            return;
+        }
+        
+        // Remove session from Redis
+        const sessionKey = `session:${token}`;
+        await redisClient.del(sessionKey);
         await revokeToken(token);
+        
         res.json({ message: 'Logged out successfully' });
     } catch (error) {
         console.error('Error in logout:', error);

@@ -1,4 +1,4 @@
-import { EmergencyPlan, EmergencyType, EmergencySize } from '../models/emergencyPlanModel';
+import { EmergencyType, EmergencySize } from '../models/emergencyPlanModel';
 
 export interface CreateEmergencyPlanRequest {
     user_id: string;
